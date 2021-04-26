@@ -88,7 +88,7 @@ example：
 |pre_tokenize|预分词，在预分词的基础上进行token|
 |token_translate|token转换|
 
-`token_dict`为vacab.txt的路径，方法内调用[load_vocab()](./tokenizers.md#def load_vocab() )获得词汇表。
+`token_dict`为vacab.txt的路径，方法内调用[load_vocab()](https://github.com/Sniper970119/bert4keras_document/tree/master/tokenizers#def-load_vocab )获得词汇表。
 
 `do_lower_case`是否全部转化为小写（bert case和uncase）。
 
