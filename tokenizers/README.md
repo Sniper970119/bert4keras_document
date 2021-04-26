@@ -12,17 +12,17 @@
 
 |参数| 说明|
 |:-----  |-----|
-|dict_path|词汇表路径|
-|encoding|编码方式|
-|simplified|是否简化 |
-|startswith| 开始标记|
+|dict_path|词汇表路径:str|
+|encoding|编码方式:str|
+|simplified|是否简化 :bool|
+|startswith| 开始标记:list|
 
 返回：
 
 |参数| 说明|
 |:-----  |-----|
-|token_dict|格式为 {keyword:idx,keyword:idx} 的字典|
-|keep_tokens（optional）|列表，精简后的词汇表在源词汇表中的映射|
+|token_dict|格式为 {keyword:idx,keyword:idx} 的字典:dict|
+|keep_tokens（optional）|列表，精简后的词汇表在源词汇表中的映射:list|
 
 这个方法就是读取bert中的`vovab.txt`文件，返回一个字典，格式为`{keyword:idx,keyword:idx}`。
 
@@ -54,9 +54,9 @@ example：
 
 |参数| 说明|
 |:-----  |-----|
-|dict_path|词汇表保存路径|
-|token_dict|需要被保存的词汇表 |
-|encoding|编码方式|
+|dict_path|词汇表保存路径:str|
+|token_dict|需要被保存的词汇表:dict |
+|encoding|编码方式:str|
 
 
 保存词汇表（比如精简后的）。
@@ -80,13 +80,13 @@ example：
 
 |参数| 说明|
 |:-----  |-----|
-|token_dict|vocab.txt的路径|
-|do_lower_case|是否转化为小写|
-|word_maxlen|单词最大长度|
-|token_start|token开始标记（CLS）|
-|token_end|token结束标记（SEP） |
-|pre_tokenize|预分词，在预分词的基础上进行token|
-|token_translate|token转换|
+|token_dict|vocab.txt的路径:str|
+|do_lower_case|是否转化为小写:bool|
+|word_maxlen|单词最大长度:int|
+|token_start|token开始标记（CLS）:str|
+|token_end|token结束标记（SEP） :str|
+|pre_tokenize|预分词，在预分词的基础上进行token:function|
+|token_translate|token转换:dict|
 
 `token_dict`为vacab.txt的路径，方法内调用[load_vocab()](https://github.com/Sniper970119/bert4keras_document/tree/master/tokenizers#def-load_vocab )获得词汇表。
 
