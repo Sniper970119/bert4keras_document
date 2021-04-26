@@ -8,7 +8,7 @@
 
 本文主要为我在阅读和使用[bert4keras](https://github.com/bojone/bert4keras )源码时的思考，和使用方法一并写下（试图）作为一版文档吧。
 
-顾名思义，其实本仓库并不能称作完整的文档，其实是一个教程，争取把用法和代码讲明白（我也能力有限，只能把我用过的和我学过的部分进行说明）。
+因此，其实本仓库并不能称作完整的文档，其实是一个教程，争取把用法和代码讲明白（我也能力有限，只能把我用过的和我学过的部分进行说明）。
 
 已经做了[transformers](https://github.com/huggingface/transformers )的contributor努力做[bert4keras](https://github.com/bojone/bert4keras )的哈哈哈哈。
 
