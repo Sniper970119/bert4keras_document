@@ -116,8 +116,8 @@
 
 |参数| 说明|
 |:-----  |-----|
-|func|字符串:function|
-|iterable|输出字符串编码方式:list|
+|func|单个数据处理的方法:function|
+|iterable|数据:list|
 |workers|线程 or 进程 数:int|
 |max_queue_size|最大队列长度:int|
 |callback|回调函数:function|
@@ -315,7 +315,7 @@ example：
 example：
 
     text = '贝贝好爱干净！每天出门都要洗澡。还喜欢喝蒙牛！不喜欢蹲地方~喜欢坐凳子上还喜欢和我坐在一起~'
-    texts = text_segmentate(text, 1, u'\n。；：，！~',u'。')
+    texts = text_segmentate(text, 1, u'\n。；：，！~', u'。')
     # output:
     ['贝贝好爱干净！', 
     '每天出门都要洗澡', 
