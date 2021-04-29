@@ -487,7 +487,7 @@ example:
 |maxlen|最大长度:int|
 |minlen|最小长度:int|
 
-该类为一个自回归生成模型解码的基类。
+该类为一个自回归生成模型解码的基类（类似于seq2seq）。
 
 `start_id` 为解码的起始id，一般为CLS。
 
@@ -535,9 +535,52 @@ example:
 
 一个静态方法，用来完善predict函数。
 
-`default_rtype`为`probas`时为随机采样调用，`logits`为`beam_search`时调用；
+`default_rtype`为`probas`时为随机采样调用，返回归一化的概率。`logits`为`beam_search`时调用，返回softmax前的结果或者概率对数；
 
 该方法实际上主要就是model.predict()然后完善了一下输出。
+
+
+### def predict()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/snippets.py#L551)
+
+    def predict(self, inputs, output_ids, states=None)
+    
+ 其中：
+
+|参数| 说明|
+|:-----  |-----|
+|inputs|输入:list 或 tensor 或 ndarry|
+|output_ids|输出id:list|
+|states|未知：未知|
+
+
+返回：
+
+|参数| 说明|
+|:-----  |-----|
+|res |结果: tuple|   
+
+这个函数需要用户需自定义实现。
+
+`inputs`模型的输入（一般为CLS，也就是解析的起点）。
+
+`output_ids`输出的id，就是模型当前解析的输出（通过[beam search](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-beam_search ) 
+或者 [random_sample](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-random_sample ) ）
+
+`states`未知，只见到过为None的情况，以后了解后补全。
+
+返回二元组 (得分或概率, states)。
+
+example:
+
+    @AutoRegressiveDecoder.wraps(default_rtype='probas')
+    def predict(self, inputs, output_ids, states):
+        token_ids = output_ids
+        segment_ids = np.zeros_like(token_ids)
+        return self.last_token(model).predict([
+            token_ids, segment_ids, inputs[0]
+        ])
 
 ### def last_token()
 
@@ -591,7 +634,7 @@ beam search解码。
 `inputs`输入的序列，如果没有输入则为空列表
 `topk`topk即beam size
 `states`状态，我现在只见过None，我也不知道这玩意具体是干嘛的。
-`temperature` 默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-wraps )中的一个参数，用来控制结果的softmax比例。
+`temperature` 默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-predict )中的一个参数，用来控制结果的softmax比例。
 `min_ends`从代码阅读结果来看，应该是最小的结束标记次数，默认为1（比如生成nsp那种句子，则为2）。
 
 ### def random_sample()
@@ -635,7 +678,7 @@ beam search解码。
 `topk`非None的topk表示每一步只从概率最高的topk个中采样 
 `topp`非None的topp表示每一步只从概率最高的且概率之和刚好达到topp的若干个token中采样
 `states`状态，我现在只见过None，我也不知道这玩意具体是干嘛的。
-`temperature`默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-wraps )中的一个参数，用来控制结果的softmax比例。
+`temperature`默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-predict )中的一个参数，用来控制结果的softmax比例。
 `inputs`非None的topp表示每一步只从概率最高的且概率之和刚好达到topp的若干个token中采样
 
 
