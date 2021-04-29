@@ -591,7 +591,7 @@ beam search解码。
 `inputs`输入的序列，如果没有输入则为空列表
 `topk`topk即beam size
 `states`状态，我现在只见过None，我也不知道这玩意具体是干嘛的。
-`temperature` 默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-wrap )中的一个参数，用来控制结果的softmax比例。
+`temperature` 默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-wraps )中的一个参数，用来控制结果的softmax比例。
 `min_ends`从代码阅读结果来看，应该是最小的结束标记次数，默认为1（比如生成nsp那种句子，则为2）。
 
 ### def random_sample()
@@ -635,7 +635,7 @@ beam search解码。
 `topk`非None的topk表示每一步只从概率最高的topk个中采样 
 `topp`非None的topp表示每一步只从概率最高的且概率之和刚好达到topp的若干个token中采样
 `states`状态，我现在只见过None，我也不知道这玩意具体是干嘛的。
-`temperature`默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-wrap )中的一个参数，用来控制结果的softmax比例。
+`temperature`默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-wraps )中的一个参数，用来控制结果的softmax比例。
 `inputs`非None的topp表示每一步只从概率最高的且概率之和刚好达到topp的若干个token中采样
 
 
