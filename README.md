@@ -36,3 +36,6 @@
     print(model.predict([np.array([token_ids]), np.array([segment_ids])]))
 
 
+### 其他库
+
+其他库详见文件列表。分别对应了[bert4keras](https://github.com/bojone/bert4keras )的几大文件。
