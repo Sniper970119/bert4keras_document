@@ -265,6 +265,10 @@ look ahead：通过一个内循环优化器（它可以是任何优化器，Adam
 
 [苏神博客](https://kexue.fm/archives/6575#%E6%9D%83%E9%87%8D%E6%BB%91%E5%8A%A8%E5%B9%B3%E5%9D%87 )
 
+example:
+
+    AdamEMA = extend_with_exponential_moving_average(Adam, name='AdamEMA')
+    optimizer = AdamEMA(learing_rate, ema_momentum=0.9999)
 
 ### def extend_with_parameter_wise_lr()
 
