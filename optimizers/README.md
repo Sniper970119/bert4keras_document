@@ -267,6 +267,7 @@ look ahead：通过一个内循环优化器（它可以是任何优化器，Adam
 
 example:
 
+    from bert4keras.optimizers import Adam, extend_with_exponential_moving_average
     AdamEMA = extend_with_exponential_moving_average(Adam, name='AdamEMA')
     optimizer = AdamEMA(learing_rate, ema_momentum=0.9999)
 
