@@ -76,6 +76,8 @@ example：
         token_translate=None,
     )
 
+用于类Bert模型的tokenizer。
+
 其中：
 
 |参数| 说明|
@@ -188,4 +190,10 @@ example:
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/tokenizers.py#L404)
 
-暂无
+用于类T5模型的tokenizer。
+
+### def encode()
+
+详见Tokenizer的[encode](https://github.com/Sniper970119/bert4keras_document/tree/master/tokneizers#def-encode )
+
+这两个共同继承自TokenizerBase，并在TokenizerBase中完成实现。
