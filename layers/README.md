@@ -176,27 +176,161 @@ hidden_*系列参数仅为有条件输入时(conditional=True)使用
 `hidden_initializer` 参数初始化方式，默认为`glorot_uniform`。
 
 
+## class PositionEmbedding()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L524 )
+
+    class PositionEmbedding(Layer)
+
+定义可训练的位置Embedding(比如Bert的position embedding)
 
 
+## class SinusoidalPositionEmbedding()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L612 )
+
+    class SinusoidalPositionEmbedding(Layer)
+
+定义Sin-Cos位置Embedding(比如transformer的position embedding)
 
 
+## class RelativePositionEmbedding()
 
-## class GlobalAveragePooling1D()
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L672 )
 
-[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L122 )
+    class RelativePositionEmbedding(Layer)
 
-    class GlobalAveragePooling1D(keras.layers.GlobalAveragePooling1D)
-
-
-
+相对位置编码(比如NEZHA的position embedding)（model->1085）
 
 
+## class RelativePositionEmbeddingT5()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L727 )
+
+    class RelativePositionEmbeddingT5(Layer)
+
+Google T5的相对位置编码  https://arxiv.org/abs/1910.10683
 
 
+## class FeedForward()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L786 )
+
+    class FeedForward(Layer):
+
+FeedForward层
+
+        def __init__(
+        self,
+        units,
+        activation='relu',
+        use_bias=True,
+        kernel_initializer='glorot_uniform',
+        **kwargs
+    )
 
 
+如果activation不是一个list，那么它就是两个Dense层的叠加；
+
+如果activation是一个list，那么第一个Dense层将会被替换成门控线性单元（Gated Linear Unit）。
+
+[参考论文(T5.1.1的论文，通过使用GLU来增强FFN的效果。)](https://arxiv.org/abs/2002.05202 )
+[苏神博客](https://kexue.fm/archives/7867#T5.1.1 )
 
 
+## class ConditionalRandomField()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L850 )
+
+    class ConditionalRandomField(Layer)
+
+纯Keras实现CRF层，CRF层本质上是一个带训练参数的loss计算层。
+
+条件随机场，整个框架内暂时没有被（调）用过。
 
 
+## class MaximumEntropyMarkovModel()
 
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L971 )
+
+    class MaximumEntropyMarkovModel(Layer):
+
+
+（双向）最大熵隐马尔可夫模型，作用和用法都类似CRF，但是比CRF更快更简单。
+
+同样，整个框架内暂时没有被（调）用过。
+
+
+## class Loss()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L1158 )
+
+    class Loss(Layer)
+
+特殊的层，用来定义复杂loss。
+
+通过引入一个层，来实现复杂的loss计算。在层内部通过将计算后的loss添加到self.add_loss从而定义这个层的loss。
+
+    def call(self, inputs, mask=None):
+        loss = self.compute_loss(inputs, mask)
+        self.add_loss(loss, inputs=inputs)
+        if self.output_axis is None:
+            return inputs
+        elif isinstance(self.output_axis, list):
+            return [inputs[i] for i in self.output_axis]
+        else:
+            return inputs[self.output_axis]
+
+    def compute_loss(self, inputs, mask=None):
+        raise NotImplementedError
+
+通过`self.add_loss(loss, inputs=inputs)`定义改层loss，并且返回`inputs`，因此并不改变整个网络的输出。
+
+而add_loss 则是`class Layer(object):`中的一个方法，定义如下：
+
+    def add_loss(self, losses, inputs=None):
+        """Adds losses to the layer.
+
+        The loss may potentially be conditional on some inputs tensors,
+        for instance activity losses are conditional on the layer's inputs.
+
+        # Arguments
+            losses: loss tensor or list of loss tensors
+                to add to the layer.
+            inputs: input tensor or list of inputs tensors to mark
+                the losses as conditional on these inputs.
+                If None is passed, the loss is assumed unconditional
+                (e.g. L2 weight regularization, which only depends
+                on the layer's weights variables, not on any inputs tensors).
+        """
+
+这样添加了一个loss层来计算loss作为整个模型的loss。实在是。。太妙了，牛b。
+
+example:
+
+    class CrossEntropy(Loss):
+        """交叉熵作为loss，并mask掉padding部分
+        """
+    
+        def compute_loss(self, inputs, mask=None):
+            y_true, y_pred = inputs
+            if mask[1] is None:
+                y_mask = 1.0
+            else:
+                y_mask = K.cast(mask[1], K.floatx())[:, 1:]
+            y_true = y_true[:, 1:]  # 目标token_ids
+            y_pred = y_pred[:, :-1]  # 预测序列，错开一位
+            loss = K.sparse_categorical_crossentropy(y_true, y_pred)
+            loss = K.sum(loss * y_mask) / K.sum(y_mask)
+            return loss
+
+    model = build_transformer_model(
+        config_path,
+        checkpoint_path,
+        application='lm',
+    )
+    output = CrossEntropy(1)([model.inputs[0], model.outputs[0]])
+
+这里自定义了一个可以mask的损失函数（MLM的），然后下面通过将Bert的输入和输出一同送入计算loss，并返回 `model.outputs[0]` 也就是索引1.
+
+这样就可以“透明”的添加一个自定义loss，而不改变模型输出。
