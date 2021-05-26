@@ -94,25 +94,3 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-### def strQ2B()
-
-[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/backend.py#L28 )
-
-    def strQ2B(ustring)
-
-其中：
-
-|参数| 说明|
-|:-----  |-----|
-|ustring|全角字符串:str|
