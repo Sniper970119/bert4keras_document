@@ -38,7 +38,7 @@
     
 重新定义GlobalMaxPooling1D，支持mask。
 
-通过 # Todo backend的sequence_masking 来进行mask。
+通过 backend的[def sequence_masking()](https://github.com/Sniper970119/bert4keras_document/tree/master/backend#def-sequence_masking ) 来进行mask。
 
 ## class Embedding()
 
