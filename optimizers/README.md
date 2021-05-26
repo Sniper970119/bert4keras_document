@@ -151,6 +151,8 @@ LAMB（Layer-wise Adaptive Moments optimizer for Batching training）优化器�
 带有分段线性学习率的优化器,其中schedule是形如{1000: 1, 2000: 0.1}的字典，,表示0～1000步内学习率线性地从零增加到100%，然后
 1000～2000步内线性地降到10%，2000步以后保持10%。
 
+调用了backend中的[def piecewise_linear()](https://github.com/Sniper970119/bert4keras_document/tree/master/backend#def-piecewise_linear() )方法。
+
 
 ### def extend_with_gradient_accumulation()
 
