@@ -184,6 +184,23 @@ hidden_*系列参数仅为有条件输入时(conditional=True)使用
 
 定义可训练的位置Embedding(比如Bert的position embedding)
 
+    def __init__(
+            self,
+            input_dim,
+            output_dim,
+            merge_mode='add',
+            hierarchical=None,
+            embeddings_initializer='zeros',
+            custom_position_ids=False,
+            **kwargs
+        )
+
+`hierarchical`默认为None，为True时为使用超长编码(利用层次分解，将bert的最长512的序列长度扩充为512*512，会损失一定精度，
+但是微调后可以使用很小的代价恢复性能) [苏神博客](https://kexue.fm/archives/7947 )
+
+
+
+
 
 ## class SinusoidalPositionEmbedding()
 
