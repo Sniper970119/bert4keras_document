@@ -135,6 +135,13 @@ bert4keras：
 
 在实际计算过程中，q_mask并没有使用（但是参与了全程的参数传递），最终的mask是通过计算完attention通过v_mask的值mask掉attention的输出。
 
+这里通过一行代码
+
+    qkv_inputs = [qw, kw, vw] + inputs[3:]
+
+来适配将相对位置嵌入到注意力机制中（[NEZHA中使用](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-NEZHA )）。
+
+
 
 
 ## class LayerNormalization()
