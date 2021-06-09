@@ -38,12 +38,12 @@ Model主要存放一些模型。比如Trm、Bert、T5等。
 `hierarchical`默认为None，为True时为使用超长编码(利用层次分解，将bert（Transformer）的最长512的序列长度扩充为512*512，会损失一定精度，
 但是微调后可以使用很小的代价恢复性能) [苏神博客](https://kexue.fm/archives/7947 )
 
-
 `residual_attention_scores`是否使用残差Attention矩阵。残差Attention矩阵，给每个Attention矩阵加上前上一层的Attention矩阵，
 来源[RealFormer](https://arxiv.org/abs/2012.11747 ),目前的实现可能还相对粗糙，欠缺通用性。
 
-`ignore_invalid_weights` 为是否允许跳过名字不匹配的权重。默认为False，为True时，遇到名字不匹配的层名字时，
-会输出一个报错信息，但是程序并不会终止，改层的权重会随机初始化。
+`ignore_invalid_weights` 为是否允许跳过名字不匹配的权重。默认为False，为True时，遇到名字不匹配的层名字时， 会输出一个报错信息，但是程序并不会终止，改层的权重会随机初始化。
+
+### def build(self):
 
     def build(
             self,
@@ -57,10 +57,13 @@ Model主要存放一些模型。比如Trm、Bert、T5等。
 
 `attention_caches` 为Attention的K,V的缓存序列字典，格式为{Attention层名: [K缓存, V缓存]}；
 
-`layer_norm_*`系列参数：实现`Conditional Layer Normalization`时使用，用来实现以“固定长度向量”为条件的条件Bert。该方法通过在LN层加入一个方向的扰动，从而可以在一个模型中完成多个类似的任务，
+`layer_norm_*`系列参数：实现`Conditional Layer Normalization`
+时使用，用来实现以“固定长度向量”为条件的条件Bert。该方法通过在LN层加入一个方向的扰动，从而可以在一个模型中完成多个类似的任务，
 比如在一个模型中生成积极的文本和消极的文本、在一个模型中进行短短文本匹配，短长文本匹配等。详见[苏神博客](https://kexue.fm/archives/7124 )
 
 `additional_input_layers`为除Bert原生输入外其余的输入项。通过`self.set_inputs()`来添加到模型中。
+
+### def call(self):
 
     def call(self, inputs):
         """定义模型的执行流程
@@ -75,6 +78,8 @@ Model主要存放一些模型。比如Trm、Bert、T5等。
         return outputs
 
 call方法可以看出来，整体来说，是embedding、main layers（Transformer）、final layers（dense）。
+
+### def set_inputs(self):
 
     def set_inputs(self, inputs, additional_input_layers=None):
         """设置input和inputs属性
@@ -96,8 +101,10 @@ call方法可以看出来，整体来说，是embedding、main layers（Transfor
         else:
             self.input = inputs[0]
 
-set_inputs方法可以看出来如何添加的`additional_input_layers`，同时处理input参数。
-（input/inputs区分一下，我研究半天这是干嘛的，后来发现不一样）。
+set_inputs方法可以看出来如何添加的`additional_input_layers`，同时处理input参数。 （input/inputs区分一下，我研究半天这是干嘛的，后来发现不一样，如果你观察过`bert4keras`
+的模型你就会发现有input和inputs两个变量）。
+
+### def load_embeddings(self):
 
     def load_embeddings(self, embeddings):
         """处理Embedding层权重
@@ -121,9 +128,8 @@ set_inputs方法可以看出来如何添加的`additional_input_layers`，同时
 
 load_embedding分别对应的缩小embedding（keep_token）和扩大embedding(compound_token)两种情况。
 
-前者用于不需要这么多token（比如bert4keras默认的精简方式详见[参数simplified](https://github.com/Sniper970119/bert4keras_document/tree/master/tokenizers#def-load_vocab )）
-，只需要将embedding对应部分截取出来就行。
-后者对应需要更多的token，直接在embedding中添加新的行（axis=0）就行了。
+前者用于不需要这么多token（比如bert4keras默认的精简方式详见[参数simplified](https://github.com/Sniper970119/bert4keras_document/tree/master/tokenizers#def-load_vocab )
+） ，只需要将embedding对应部分截取出来就行。 后者对应需要更多的token，直接在embedding中添加新的行（axis=0）就行了。
 
 ### class LM_Mask()
 
@@ -146,7 +152,7 @@ load_embedding分别对应的缩小embedding（keep_token）和扩大embedding(c
 
 这里`mask = idxs[None, :] <= idxs[:, None]`添加两个None维度是为了便于idx的错位比较
 
-不过这里我仍然有一个未解之谜，就是为什么要对mask后的矩阵添加两个维度，问过苏神，说是multi-head-attention需要，
+不过这里我仍然有一个未解之谜，就是为什么要对mask后的矩阵添加两个维度[None,None,batch_size,mask]，问过苏神，说是multi-head-attention需要，
 但是我看了multi-head-attention部分的源码还是没太明白，我太菜了不敢继续问苏神，等我继续摸索摸索。
 
 example:
@@ -157,7 +163,6 @@ example:
     model='bert',
     application='lm',
     )
-    
 
 ### class UniLM_Mask()
 
@@ -182,8 +187,7 @@ example:
 
 这里`idxs[:, None, :] <= idxs[:, :, None]`添加两个None维度是为了便于idx的错位比较
 
-这里依然由上面的问题，上面是对mask最前面添加了两个维度，而这里对第二维添加了一个维度，不太清楚为啥。。果然还是我太菜了。
-回头想明白回来填坑。
+这里依然有上面的问题，上面是对mask最前面添加了两个维度，而这里对第二维添加了一个维度[batch_size,None,mask]，不太清楚为啥。。果然还是我太菜了。 回头想明白回来填坑。
 
 example:
 
@@ -193,22 +197,195 @@ example:
     model='bert',
     application='unilm',
     )
-    
+
+## class BERT()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#400)
+
+    class BERT(Transformer)
+
+Bert类，继承了`Transformer`类
+
+    def __init__(
+        self,
+        max_position,  # 序列最大长度
+        segment_vocab_size=2,  # segment总数目
+        with_pool=False,  # 是否包含Pool部分
+        with_nsp=False,  # 是否包含NSP部分
+        with_mlm=False,  # 是否包含MLM部分
+        hierarchical_position=None,  # 是否层次分解位置编码
+        custom_position_ids=False,  # 是否自行传入位置id
+        shared_segment_embeddings=False,  # 若True，则segment跟token共用embedding
+        **kwargs  # 其余参数
+    )
+
+我们可以发现，苏神在这里还支持了多segment_idx(原生bert仅支持两句话，也就是segment_vocab_size=2)。
+
+`with_poo`l就是最后CLS的768维、`with_nsp`就是是否进行NSP任务（当进行NSP任务时，`with_pool`必须为True。因为nsp需要CLS向量。当然，这一步框架可以自动处理），
+
+        if self.with_nsp and not self.with_pool:
+            self.with_pool = True
+
+`with_mlm`也是是否进行MLM任务。
+
+`hierarchical_position`对应的层次编码，以让bert可以处理512*512长度的文本[苏神博客](https://kexue.fm/archives/7947 )。
+
+### def apply_embeddings(self):
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L454 )
+
+这个方法为BERT的embedding，它是token、position、segment三者embedding之和
+
+从这里我们可以看到bert的embedding过程，同时还适配处理了`Conditional Layer Normalization`，[苏神博客](https://kexue.fm/archives/7124 )。
+
+这里提一嘴，为什么三者相加呢？不怕信息混乱吗？
+
+苏神在这里给的解释是：
+
+    Embedding的数学本质，就是以one hot为输入的单层全连接。
+    也就是说，世界上本没什么Embedding，有的只是one hot。 ”
+
+所以你给三个拼接再送去下级网络，和加起来，并没有什么实质性区别。
+
+### def apply_main_layers(self):
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L529 )
+
+BERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --> FFN --> Add --> LN
+
+这里是Bert的Transformer的最基本层（也就是Bert由12个这种层组成），由基类Transformer的[call](https://github.com/Sniper970119/bert4keras_document/tree/master/models#def_call )
+进行循环调用
+
+这里的LN依然适配了`Conditional Layer Normalization`，[苏神博客](https://kexue.fm/archives/7124 )。
+
+## class ALBERT()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#776)
+
+    class ALBERT(BERT)
+
+ALBERT模型，继承Bert。
+
+重新定义了`apply_main_layers`（核心层）和层名称映射（因为相比Bert，公共层参数了，所以映射也会发生变化。可以看到Albert的映射中并没有循环）。
+
+### def apply_main_layers(self):
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L779 )
+
+ALBERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --> FFN --> Add --> LN
+
+其实这里除了命名（Bert的12层分别命名）之外，相比Bert没有什么变化。
+
+由于Bert的[apply_embeddings](https://github.com/Sniper970119/bert4keras_document/tree/master/models#def_apply_embeddings )
+已经处理了embedding和hidden size不符合的问题，因此Albert这里对嵌入压缩并不需要格外适配。
+
+## class ALBERT_Unshared()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#893)
+
+    class ALBERT_Unshared(BERT)
+
+解开ALBERT共享约束，当成BERT用。
+
+这个就可以只修改权重名映射了，因为“不共享”就和Bert一样了。embedding压缩Bert的基类也已经处理了。
+
+## class NEZHA()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#933)
+
+    class NEZHA(BERT)
+
+华为推出的NAZHA模型。[论文链接](https://arxiv.org/abs/1909.00204 )
+
+全称为“ **NE**ural contextuali**Z**ed representation for C**H**inese l**A**nguage understanding ”。
+
+主要改进如下：
+
+1.增加相对位置编码函数
+
+- Bert中学习了绝对位置编码，Transformer中也是用了函数式编码。 NEZHA通过在注意力机制中引入相对位置的概念，提升了在NER等任务中的效果。
+
+2.全词掩码
+
+- 他减轻了预训练过程中掩码不分word pirce的弊端。 比如：playing在token部分会被分为play和##ing，而原生bert会随机的mask play或者##ing或者两者全部mask，而wwm则只会mask两者
+
+3.混合精度训练
+
+- 在训练过程中的每一个step，为模型的所有weight维护一个FP32的copy，称为Master Weights；在做前向和后向传播过程中，Master
+  Weights会转换成FP16（半精度浮点数）格式，其中权重、激活函数和梯度都是用FP16进行表示，最后梯度会转换成FP32格式去更新Master Weights。
+  由于float16的运算速度大于float32，因此能够显著提升训练速度。
+
+4.优化器改进
+
+- NEZHA使用了《Large Batch Optimization for Deep Learning：Training BERT in 76 minutes》
+  （[def extend_with_layer_adaptation](https://github.com/Sniper970119/bert4keras_document/tree/master/optimizers#def-extend_with_layer_adaptation_v2 )
+  ） 的一个优化器，它可以将预训练bert时间从三天降到76分钟。
+
+从上面的改进就可以发现，模型端的改进主要就是位置编码。
+
+因此NEZHA的embedding是token、segment两者embedding之和
+
+### def apply_embeddings(self):
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L937 )
+
+可以看到，并没有Position Embedding。同时依然适配了embedding压缩。
+
+### def compute_position_bias(self):
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1077)
+
+这里就是计算相对位置编码的地方。可以看到最后输出的维度为attention_key_size(bert base为64)。
+
+调用[class RelativePositionEmbedding](https://github.com/Sniper970119/bert4keras_document/tree/master/layers#class-relativepositionembedding)
+
+### def apply_main_layers(self):
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L997)
+
+和其他的并没有什么太大差距，不同的是这里将position_bias（def compute_position_bias的返回）送入attention中。
+
+这里送入Multi-Head-attention中的数据从3维上升到4维。
+
+查看[Multi-Head-attention](https://github.com/Sniper970119/bert4keras_document/tree/master/layers#class-MultiHeadAttention)
+的代码发现有一行代码：
+
+    qkv_inputs = [qw, kw, vw] + inputs[3:]
+
+因此，第四维度实际是直接加到了qkv矩阵中，实现了在attention中添加相对位置信息。
+
+## class RoFormer()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#1096)
+
+    class RoFormer(NEZHA)
+
+旋转式位置编码的BERT模型。[苏神博客](https://kexue.fm/archives/8265 )
+
+一个苏神（追一科技）自研的模型。
+
+既然是“旋转式位置编码的BERT模型”，为什么继承NEZHA不继承BERT呢？
+
+因为既然采用了“旋转式位置编码”，也就意味着同样是“相对位置编码”。
+
+实际上，旋转式位置编码（Rotary Position Embedding，RoPE），是一种配合Attention机制能达到“绝对位置编码的方式实现相对位置编码”的设计。
+
+因此，这种方式依然需要将绝对位置编码送入attention中。因此需要“借用”NEZHA中已经写好的位置编码（因为都没有进行position embedding）。
 
 
+## class ELECTRA()
 
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#1197)
 
+    class ELECTRA(BERT)
 
+Google推出的ELECTRA模型[论文](https://arxiv.org/abs/2003.10555 )
 
+相比Bert，主要是将结构更改称为类强化学习的思路（但是不是），通过生成器和判别器来训练。[我的笔记](http://www.sniper97.cn/index.php/note/deep-learning/3842/ )
 
+但是苏神这里的ELECTRA并不是完整模型，而只是判别器（只有在预训练过程中需要生成器）。
 
-
-
-
-
-
-
-
+而原文的判别器也是bert base的模型，因此这里苏神只对模型特有的最后一层进行了一定的改变（`def apply_final_layers`）。
 
 
 
