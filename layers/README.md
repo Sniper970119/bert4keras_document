@@ -217,7 +217,8 @@ hidden_*系列参数仅为有条件输入时(conditional=True)使用
 
     class RelativePositionEmbedding(Layer)
 
-相对位置编码(比如NEZHA的position embedding)（model->1085）
+计算相对位置编码。(比如NEZHA的position embedding)[代码](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1085),
+[文档](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-NEZHA )
 
 
 ## class RelativePositionEmbeddingT5()
