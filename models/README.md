@@ -39,7 +39,7 @@ Model主要存放一些模型。比如Trm、Bert、T5等。
 但是微调后可以使用很小的代价恢复性能) [苏神博客](https://kexue.fm/archives/7947 )
 
 `residual_attention_scores`是否使用残差Attention矩阵。残差Attention矩阵，给每个Attention矩阵加上前上一层的Attention矩阵，
-来源[RealFormer](https://arxiv.org/abs/2012.11747 ),目前的实现可能还相对粗糙，欠缺通用性。
+来源RealFormer[论文](https://arxiv.org/abs/2012.11747 ),目前的实现可能还相对粗糙，欠缺通用性。
 
 `ignore_invalid_weights` 为是否允许跳过名字不匹配的权重。默认为False，为True时，遇到名字不匹配的层名字时， 会输出一个报错信息，但是程序并不会终止，改层的权重会随机初始化。
 
