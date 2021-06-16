@@ -139,8 +139,9 @@ load_embedding分别对应的缩小embedding（keep_token）和扩大embedding(c
         """
         return self.attention_bias
 
-这个方法主要是计算attention的mask（或者bias）比如在[LM_MASK](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class_LM_Mask )以及[UniLM_Mask](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class_UniLM_Mask )
+这个方法主要是计算attention的mask（或者bias）比如在[LM_MASK](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-LM_Mask )以及[UniLM_Mask](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-UniLM_Mask )
 中复写的`compute_attention_bias`，用于相关用途（在attention阶段添加mask[比如LM中的随机Mask]或bias[比如NEZHA在attention中添加相对位置编码]）。
+
 
 
 * * *
@@ -173,13 +174,15 @@ load_embedding分别对应的缩小embedding（keep_token）和扩大embedding(c
 
         return self.attention_bias
 
-这里就是计算一个下三角矩阵，通过s（s -> [batch_size,token_ids]）计算mask矩阵。用于进行masked language model。
+这里就是计算一个下三角矩阵，通过s（s -> [batch_size,token_ids]）计算mask矩阵。用于进行语言模型的训练（其实就是GPT-2的思路）。
 
 使用只需要在`build_transformer_model`中添加`application='lm'`即可。
 
 这里`mask = idxs[None, :] <= idxs[:, None]`添加两个None维度是为了便于idx的错位比较
 
 最后输出[1,1,token_len,token_len]，最后两个token_len为mask矩阵。用于拼接在MultiHeadAttention的输入中。
+
+详见[multi-head-attention](https://github.com/Sniper970119/bert4keras_document/tree/master/layers#class-multiheadattention )
 
 example:
 
@@ -228,7 +231,9 @@ example:
 
 这里`idxs[:, None, :] <= idxs[:, :, None]`添加两个None维度是为了便于idx的错位比较
 
-最后输出[1,1,token_len,token_len]，最后两个token_len为mask矩阵。用于拼接在MultiHeadAttention的输入中。
+最后输出[batch size,1,token_len,token_len]，最后两个token_len为mask矩阵。用于拼接在MultiHeadAttention的输入中。
+
+详见[multi-head-attention](https://github.com/Sniper970119/bert4keras_document/tree/master/layers#class-multiheadattention )
 
 example:
 
@@ -264,7 +269,7 @@ Bert类，继承了`Transformer`类
 
 我们可以发现，苏神在这里还支持了多segment_idx(原生bert仅支持两句话，也就是segment_vocab_size=2)。
 
-`with_poo`l就是最后CLS的768维、`with_nsp`就是是否进行NSP任务（当进行NSP任务时，`with_pool`必须为True。因为nsp需要CLS向量。当然，这一步框架可以自动处理），
+`with_pool`就是最后CLS的768维、`with_nsp`就是是否进行NSP任务（当进行NSP任务时，`with_pool`必须为True。因为nsp需要CLS向量。当然，这一步代码可以自动处理），
 
         if self.with_nsp and not self.with_pool:
             self.with_pool = True
@@ -296,7 +301,7 @@ Bert类，继承了`Transformer`类
 
 BERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --> FFN --> Add --> LN
 
-这里是Bert的Transformer的最基本层（也就是Bert由12个这种层组成），由基类Transformer的[call](https://github.com/Sniper970119/bert4keras_document/tree/master/models#def_call )
+这里是Bert的Transformer的最基本层（也就是Bert由12个这种层组成），由基类Transformer的[call](https://github.com/Sniper970119/bert4keras_document/tree/master/models#def-call )
 进行循环调用
 
 这里的LN依然适配了`Conditional Layer Normalization`，[苏神博客](https://kexue.fm/archives/7124 )。
@@ -321,7 +326,7 @@ ALBERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --
 
 其实这里除了命名（Bert的12层分别命名）之外，相比Bert没有什么变化。
 
-由于Bert的[apply_embeddings](https://github.com/Sniper970119/bert4keras_document/tree/master/models#def_apply_embeddings )
+由于Bert的[apply_embeddings](https://github.com/Sniper970119/bert4keras_document/tree/master/models#def-apply_embeddings )
 已经处理了embedding和hidden size不符合的问题，因此Albert这里对嵌入压缩并不需要格外适配。
 
 * * *
@@ -394,14 +399,10 @@ ALBERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --
 
 和其他的并没有什么太大差距，不同的是这里将position_bias（def compute_position_bias的返回）送入attention中。
 
-这里送入Multi-Head-attention中的数据从3维上升到4维。
+这里送入Multi-Head-attention中的数据从3维上升到4维（或更高）。
 
-查看[Multi-Head-attention](https://github.com/Sniper970119/bert4keras_document/tree/master/layers#class-MultiHeadAttention)
-的代码发现有一行代码：
+详情查看[Multi-Head-attention](https://github.com/Sniper970119/bert4keras_document/tree/master/layers#class-MultiHeadAttention)
 
-    qkv_inputs = [qw, kw, vw] + inputs[3:]
-
-因此，第四维度实际是直接加到了qkv矩阵中，实现了在attention中添加相对位置信息。
 
 * * *
 
@@ -451,26 +452,137 @@ GPT（[GPT-1](https://github.com/openai/finetune-transformer-lm))
 
 可以看到，由于继承了`LM_Mask`，而`LM_Mask`复写了`compute_attention_bias`方法，更换为下三角矩阵，以达到Mask的效果。
 
+### def apply_embedding()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1276)
+
+    def apply_embeddings(self, inputs):
+
+GPT的embedding是token、position、segment三者embedding之和。
+跟BERT的主要区别是三者相加之后没有加LayerNormalization层。
+
 * * *
 
 ## class GPT2()
 
-[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1267)
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1386)
 
     class GPT2(GPT)
 
-GPT（[GPT-1](https://github.com/openai/finetune-transformer-lm))
+构建GPT2模型，[GPT-2](https://github.com/openai/gpt-2)
+
+### def get_inputs()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1390)
+
+    def get_inputs(self):
+
+GPT-2的输入。GPT2的输入是token_ids。
+
+### def apply_embeddings()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1398)
+
+    def apply_embeddings(self, inputs):
+
+GPT2的embedding是token、position两者embedding之和。
+
+### def apply_main_layers()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1433)
+
+    def apply_main_layers(self, inputs, index):
+
+GPT2的主体是基于Self-Attention的模块。
+
+顺序：LN --> Att  --> Add --> LN --> FFN --> Add  
+
+作为对比，这里贴出来Bert的：
+
+顺序：Att --> Add --> LN --> FFN --> Add --> LN
+
+### def apply_final_layers()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1508)
+
+    def apply_final_layers(self, inputs):
+
+GPT-2的剩余部分。
+
+相比GPT，对了一个LN（和dropout），因此整体结构变为：
+
+（LN --> Att  --> Add --> LN --> FFN --> Add ）*n --> LN --> Embedding
+
+* * *
+
+## class GPT2_ML()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1550)
+
+    class GPT2_ML(GPT)
+
+* * *
+
+## class T5_Base()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1740)
+
+    class T5_Base(Transformer):
+
+* * *
+
+## class T5_Encoder()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1861)
+
+    class T5_Encoder(T5_Base):
+
+* * *
+
+## class T5_Decoder()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L2034)
+
+    class T5_Decoder(LM_Mask, T5_Base):
+
+* * *
+
+## class T5()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L2322)
+
+    class T5(T5_Base):
+
+* * *
 
 
+### def extend_with_language_model()
 
-### def strQ2B()
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L2350)
 
-[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L13)
+    def extend_with_language_model(BaseModel):
 
-    def strQ2B(ustring)
+* * *
 
-其中：
+### def extend_with_unified_language_model()
 
-|参数| 说明|
-|:-----  |-----|
-|ustring|全角字符串:str|
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L2363)
+
+    def extend_with_unified_language_model(BaseModel):
+
+* * *
+
+### def build_transformer_model()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L2377)
+
+    def build_transformer_model(
+    config_path=None,
+    checkpoint_path=None,
+    model='bert',
+    application='encoder',
+    return_keras_model=True,
+    **kwargs
+    ):  
+
+* * *
