@@ -1,7 +1,7 @@
 # Sniper
 
 Model主要存放一些模型。比如Trm、Bert、T5等。
-
+* * *
 ## class Transformer()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L13)
@@ -131,7 +131,20 @@ load_embedding分别对应的缩小embedding（keep_token）和扩大embedding(c
 前者用于不需要这么多token（比如bert4keras默认的精简方式详见[参数simplified](https://github.com/Sniper970119/bert4keras_document/tree/master/tokenizers#def-load_vocab )
 ） ，只需要将embedding对应部分截取出来就行。 后者对应需要更多的token，直接在embedding中添加新的行（axis=0）就行了。
 
-### class LM_Mask()
+
+### def compute_attention_bias(self)
+
+    def compute_attention_bias(self, inputs=None):
+        """定义每一层的Attention Bias
+        """
+        return self.attention_bias
+
+这个方法主要是计算attention的mask（或者bias）比如在[LM_MASK](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class_LM_Mask )以及[UniLM_Mask](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class_UniLM_Mask )
+中复写的`compute_attention_bias`，用于相关用途（在attention阶段添加mask[比如LM中的随机Mask]或bias[比如NEZHA在attention中添加相对位置编码]）。
+
+
+* * *
+## class LM_Mask()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L349)
 
@@ -139,21 +152,34 @@ load_embedding分别对应的缩小embedding（keep_token）和扩大embedding(c
 
 定义下三角Attention Mask（语言模型用）
 
-    def lm_mask(s):
-        seq_len = K.shape(s)[1]
-        idxs = K.arange(0, seq_len)
-        mask = idxs[None, :] <= idxs[:, None]
-        mask = K.cast(mask, K.floatx())
-        return -(1 - mask[None, None]) * 1e12
+        def compute_attention_bias(self, inputs=None):
+        """通过idxs序列的比较来得到对应的mask
+        """
+        if self.attention_bias is None:
 
-这里就是计算一个下三角矩阵，通过s（s -> [batch_size,segment_ids]）计算mask矩阵。用于进行masked language model。
+            def lm_mask(s):
+                seq_len = K.shape(s)[1]
+                idxs = K.arange(0, seq_len)
+                mask = idxs[None, :] <= idxs[:, None]
+                mask = K.cast(mask, K.floatx())
+                return -(1 - mask[None, None]) * 1e12
+
+            self.attention_bias = self.apply(
+                inputs=self.inputs[0],
+                layer=Lambda,
+                function=lm_mask,
+                name='Attention-LM-Mask'
+            )
+
+        return self.attention_bias
+
+这里就是计算一个下三角矩阵，通过s（s -> [batch_size,token_ids]）计算mask矩阵。用于进行masked language model。
 
 使用只需要在`build_transformer_model`中添加`application='lm'`即可。
 
 这里`mask = idxs[None, :] <= idxs[:, None]`添加两个None维度是为了便于idx的错位比较
 
-不过这里我仍然有一个未解之谜，就是为什么要对mask后的矩阵添加两个维度[None,None,batch_size,mask]，问过苏神，说是multi-head-attention需要，
-但是我看了multi-head-attention部分的源码还是没太明白，我太菜了不敢继续问苏神，等我继续摸索摸索。
+最后输出[1,1,token_len,token_len]，最后两个token_len为mask矩阵。用于拼接在MultiHeadAttention的输入中。
 
 example:
 
@@ -163,7 +189,7 @@ example:
     model='bert',
     application='lm',
     )
-
+* * *
 ### class UniLM_Mask()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L374)
@@ -173,11 +199,26 @@ example:
 定义UniLM的Attention Mask（Seq2Seq模型用）
 [UniLM](https://arxiv.org/abs/1905.03197 )[苏神博客](https://kexue.fm/archives/6933 )
 
-     def unilm_mask(s):
-        idxs = K.cumsum(s, axis=1)
-        mask = idxs[:, None, :] <= idxs[:, :, None]
-        mask = K.cast(mask, K.floatx())
-        return -(1 - mask[:, None]) * 1e12
+         def compute_attention_bias(self, inputs=None):
+        """通过idxs序列的比较来得到对应的mask
+        """
+        if self.attention_bias is None:
+
+            def lm_mask(s):
+                seq_len = K.shape(s)[1]
+                idxs = K.arange(0, seq_len)
+                mask = idxs[None, :] <= idxs[:, None]
+                mask = K.cast(mask, K.floatx())
+                return -(1 - mask[None, None]) * 1e12
+
+            self.attention_bias = self.apply(
+                inputs=self.inputs[0],
+                layer=Lambda,
+                function=lm_mask,
+                name='Attention-LM-Mask'
+            )
+
+        return self.attention_bias
 
 这里就是通过s（s -> [batch_size,segment_ids]）的segment_ids为1的地方进行下三角矩阵mask，用以完成UniLM的Seq2Seq任务。
 
@@ -187,7 +228,7 @@ example:
 
 这里`idxs[:, None, :] <= idxs[:, :, None]`添加两个None维度是为了便于idx的错位比较
 
-这里依然有上面的问题，上面是对mask最前面添加了两个维度，而这里对第二维添加了一个维度[batch_size,None,mask]，不太清楚为啥。。果然还是我太菜了。 回头想明白回来填坑。
+最后输出[1,1,token_len,token_len]，最后两个token_len为mask矩阵。用于拼接在MultiHeadAttention的输入中。
 
 example:
 
@@ -197,6 +238,8 @@ example:
     model='bert',
     application='unilm',
     )
+
+* * *
 
 ## class BERT()
 
@@ -258,6 +301,8 @@ BERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --> 
 
 这里的LN依然适配了`Conditional Layer Normalization`，[苏神博客](https://kexue.fm/archives/7124 )。
 
+* * *
+
 ## class ALBERT()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#776)
@@ -279,6 +324,8 @@ ALBERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --
 由于Bert的[apply_embeddings](https://github.com/Sniper970119/bert4keras_document/tree/master/models#def_apply_embeddings )
 已经处理了embedding和hidden size不符合的问题，因此Albert这里对嵌入压缩并不需要格外适配。
 
+* * *
+
 ## class ALBERT_Unshared()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#893)
@@ -288,6 +335,8 @@ ALBERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --
 解开ALBERT共享约束，当成BERT用。
 
 这个就可以只修改权重名映射了，因为“不共享”就和Bert一样了。embedding压缩Bert的基类也已经处理了。
+
+* * *
 
 ## class NEZHA()
 
@@ -354,6 +403,8 @@ ALBERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --
 
 因此，第四维度实际是直接加到了qkv矩阵中，实现了在attention中添加相对位置信息。
 
+* * *
+
 ## class RoFormer()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#1096)
@@ -372,6 +423,7 @@ ALBERT的主体是基于Self-Attention的模块。顺序：Att --> Add --> LN --
 
 因此，这种方式依然需要将绝对位置编码送入attention中。因此需要“借用”NEZHA中已经写好的位置编码（因为都没有进行position embedding）。
 
+* * *
 
 ## class ELECTRA()
 
@@ -387,7 +439,27 @@ Google推出的ELECTRA模型[论文](https://arxiv.org/abs/2003.10555 )
 
 而原文的判别器也是bert base的模型，因此这里苏神只对模型特有的最后一层进行了一定的改变（`def apply_final_layers`）。
 
+* * *
 
+## class GPT()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1267)
+
+    class GPT(LM_Mask, BERT)
+
+GPT（[GPT-1](https://github.com/openai/finetune-transformer-lm))
+
+可以看到，由于继承了`LM_Mask`，而`LM_Mask`复写了`compute_attention_bias`方法，更换为下三角矩阵，以达到Mask的效果。
+
+* * *
+
+## class GPT2()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1267)
+
+    class GPT2(GPT)
+
+GPT（[GPT-1](https://github.com/openai/finetune-transformer-lm))
 
 
 
