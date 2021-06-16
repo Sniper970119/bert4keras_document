@@ -1,7 +1,7 @@
 # Sniper
 
 这个文件主要为定义自定义层，在`model.py`中使用。
-
+* * *
 ## class Layer()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L31 )
@@ -21,7 +21,7 @@
 [keras中supports_masking为False](https://github.com/keras-team/keras/blob/keras-2/keras/engine/topology.py#L249 )
 
 [bert4keras中supports_masking默认为True](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L39 )
-
+* * *
 ## class GlobalAveragePooling1D()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L122 )
@@ -29,7 +29,7 @@
     class GlobalAveragePooling1D(keras.layers.GlobalAveragePooling1D)
     
 重新定义GlobalAveragePooling1D，支持序列长度为None。
-
+* * *
 ## class GlobalMaxPooling1D()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L136 )
@@ -39,7 +39,7 @@
 重新定义GlobalMaxPooling1D，支持mask。
 
 通过 backend的[def sequence_masking()](https://github.com/Sniper970119/bert4keras_document/tree/master/backend#def-sequence_masking ) 来进行mask。
-
+* * *
 ## class Embedding()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L156 )
@@ -49,7 +49,7 @@
 拓展Embedding层
 
 相比原生的Embedding，主要适配了T5以及其类似模型，保证第一个token不能被mask。
-
+* * *
 ## class BiasAdd()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L192 )
@@ -57,7 +57,7 @@
     class BiasAdd(Layer)
 
 在这一层加上一个可训练的偏置，用于`model.py`中的模型构建。
-
+* * *
 ## class Concatenate1D()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L210 )
@@ -93,7 +93,7 @@ bert4keras：
               masks.append(m)
           return K.concatenate(masks, axis=1)
 
-
+* * *
 ## class MultiHeadAttention()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L122 )
@@ -133,17 +133,29 @@ bert4keras：
 
 `kernel_initializer` 参数初始化方式，默认为`glorot_uniform`。
 
-在实际计算过程中，q_mask并没有使用（但是参与了全程的参数传递），最终的mask是通过计算完attention通过v_mask的值mask掉attention的输出。
+最终的mask是通过计算完attention通过v_mask的值mask掉attention的输出。
+
+
+对于attention的高端操作（比如，attention bias、position embedding[NEZHA将相对位置编码直接加到了attention中]）[NEZHA](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-NEZHA )
+
+将这些
 
 这里通过一行代码
 
     qkv_inputs = [qw, kw, vw] + inputs[3:]
 
-来适配将相对位置嵌入到注意力机制中（[NEZHA中使用](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-NEZHA )）。
+将bias添加到了inputs后，然后在`def pay_attention_to`中进行了注意力的计算。
+
+这里有一个规约：inputs[4]为attention bias，而inputs[5]则为position bias（如果不需要bias[a_bias=None]，则inputs[4]为position bias）.
+
+这里单独一提，对于语言模型的mask，并不是通过传统的“mask”手法（也许是我见识少），而是通过
+[LM_MASK](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-LM_Mask )以及
+[UniLM_Mask](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-UniLM_Mask)
+
+这类方法计算一个偏置 bias，通过在原结果中减去一个极大值，从而将attention的结果变为一个绝对值很大的负数，这样这个位置的值在softmax就会无限接近于0，因此就被mask掉了。
 
 
-
-
+* * *
 ## class LayerNormalization()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L399 )
@@ -182,7 +194,7 @@ hidden_*系列参数仅为有条件输入时(conditional=True)使用
 
 `hidden_initializer` 参数初始化方式，默认为`glorot_uniform`。
 
-
+* * *
 ## class PositionEmbedding()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L524 )
@@ -207,7 +219,7 @@ hidden_*系列参数仅为有条件输入时(conditional=True)使用
 
 
 
-
+* * *
 
 ## class SinusoidalPositionEmbedding()
 
@@ -216,7 +228,7 @@ hidden_*系列参数仅为有条件输入时(conditional=True)使用
     class SinusoidalPositionEmbedding(Layer)
 
 定义Sin-Cos位置Embedding(比如transformer的position embedding)
-
+* * *
 
 ## class RelativePositionEmbedding()
 
@@ -226,7 +238,7 @@ hidden_*系列参数仅为有条件输入时(conditional=True)使用
 
 计算相对位置编码。(比如NEZHA的position embedding)[代码](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1085),
 [文档](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-NEZHA )
-
+* * *
 
 ## class RelativePositionEmbeddingT5()
 
@@ -236,7 +248,7 @@ hidden_*系列参数仅为有条件输入时(conditional=True)使用
 
 Google T5的相对位置编码  https://arxiv.org/abs/1910.10683
 
-
+* * *
 ## class FeedForward()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L786 )
@@ -262,7 +274,7 @@ FeedForward层
 [参考论文(T5.1.1的论文，通过使用GLU来增强FFN的效果。)](https://arxiv.org/abs/2002.05202 )
 [苏神博客](https://kexue.fm/archives/7867#T5.1.1 )
 
-
+* * *
 ## class ConditionalRandomField()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L850 )
@@ -273,7 +285,7 @@ FeedForward层
 
 条件随机场，整个框架内暂时没有被（调）用过。
 
-
+* * *
 ## class MaximumEntropyMarkovModel()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L971 )
@@ -285,7 +297,7 @@ FeedForward层
 
 同样，整个框架内暂时没有被（调）用过。
 
-
+* * *
 ## class Loss()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L1158 )
