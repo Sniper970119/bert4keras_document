@@ -521,6 +521,20 @@ GPT-2的剩余部分。
 
     class GPT2_ML(GPT)
 
+
+
+构建[GPT2_ML](https://github.com/imcaspar/gpt2-ml) 模型
+GPT2_ML虽然号称GPT2，但是它的结构其实更接近GPT，它自称GPT2的原因大概是因为它开源的版本参数量达到了GPT2的15亿参数。
+
+GPT2_ML的主体是基于Self-Attention的模块
+
+顺序：Att  --> LN --> FFN --> Add --> LN
+
+(GPT-2: LN --> Att  --> Add --> LN --> FFN --> Add 
+
+Bert: Att --> Add --> LN --> FFN --> Add --> LN
+)
+
 * * *
 
 ## class T5_Base()
@@ -528,6 +542,18 @@ GPT-2的剩余部分。
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1740)
 
     class T5_Base(Transformer):
+
+
+Google的T5模型（基类）
+
+注意T5有两个版本，一开始放出来的版本称为t5.1.0，而后来放出了一个升级,版本称为t5.1.1。
+两者结构略有不同，包括后来放出来的多国语言版T5也采用了t5.1.1的结构。
+
+[t5.1.0](https://github.com/google-research/text-to-text-transfer-transformer)
+
+[t5.1.1](https://github.com/google-research/text-to-text-transfer-transformer/blob/master/released_checkpoints.md#t511)
+
+[multilingual-t5](https://github.com/google-research/multilingual-t5)
 
 * * *
 
@@ -537,6 +563,33 @@ GPT-2的剩余部分。
 
     class T5_Encoder(T5_Base):
 
+Google的T5模型（Encoder）
+
+### def apply_embeddings()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1874)
+
+    def apply_embeddings(self, inputs):
+
+T5的embedding只有token embedding，并把relative position embedding准备好，待attention使用。
+
+### def apply_main_layers()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1906)
+
+    def apply_main_layers(self, inputs, index):
+
+T5的Encoder的主体是基于Self-Attention的模块
+
+顺序：LN --> Att --> Add --> LN --> FFN --> Add
+
+### def compute_position_bias()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L1906)
+
+    def compute_position_bias(self, inputs=None):
+
+T5相对位置编码。调用[def RelativePositionEmbeddingT5]() 来计算相对位置编码。
 * * *
 
 ## class T5_Decoder()
@@ -545,6 +598,33 @@ GPT-2的剩余部分。
 
     class T5_Decoder(LM_Mask, T5_Base):
 
+Google的T5模型（Decoder）
+
+### def apply_embeddings()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L2044)
+
+    def apply_embeddings(self, inputs):
+
+T5的embedding只有token embedding，并把relative position embedding准备好，待attention使用。
+
+### def apply_main_layers()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L2091)
+
+    def apply_main_layers(self, inputs, index):
+
+T5的Decoder主体是基于Self-Attention、Cross-Attention的模块
+
+顺序：LN --> Att1 --> Add --> LN --> Att2 --> Add -->  LN --> FFN --> Add
+
+### def compute_position_bias()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/models.py#L2293)
+
+    def compute_position_bias(self, inputs=None):
+
+T5相对位置编码。调用[def RelativePositionEmbeddingT5]() 来计算相对位置编码。
 * * *
 
 ## class T5()
