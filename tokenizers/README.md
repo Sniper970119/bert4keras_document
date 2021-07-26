@@ -154,7 +154,7 @@ example:
 
 `maxlen`返回数据的最大长度，超过截断（比如bert base的512）。
 
-`pattern`对于first text 和second text的拼接规则,S代表CLS，E代表SEP，代表两句话的拼接规则，比如默认的S*E*E则为CLS sentence 1 SEP sentence 2 SEP，而S*ES*E 则为 CLS sentence 1 SEP CLS sentence 2 SEP。
+`pattern`对于first text 和second text的拼接规则,S代表CLS，E代表SEP，代表两句话的拼接规则，比如默认的S\*E\*E则为CLS sentence 1 SEP sentence 2 SEP，而S\*ES\*E 则为 CLS sentence 1 SEP CLS sentence 2 SEP。
 
 `truncate_from`截断方向，对于超过最大长度的数据，截头部（left）还是截尾部（right）当然还支持通过一直删某个中间位置来截取（某一int值），
 截取方法详见[truncate_sequences](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-truncate_sequences )。
