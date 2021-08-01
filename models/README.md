@@ -589,7 +589,7 @@ T5的Encoder的主体是基于Self-Attention的模块
 
     def compute_position_bias(self, inputs=None):
 
-T5相对位置编码。调用[def RelativePositionEmbeddingT5]() 来计算相对位置编码。
+T5相对位置编码。调用[def RelativePositionEmbeddingT5](Todo) 来计算相对位置编码。
 * * *
 
 ## class T5_Decoder()
@@ -624,7 +624,7 @@ T5的Decoder主体是基于Self-Attention、Cross-Attention的模块
 
     def compute_position_bias(self, inputs=None):
 
-T5相对位置编码。调用[def RelativePositionEmbeddingT5]() 来计算相对位置编码。
+T5相对位置编码。调用[def RelativePositionEmbeddingT5](Todo) 来计算相对位置编码。
 * * *
 
 ## class T5()
@@ -633,8 +633,11 @@ T5相对位置编码。调用[def RelativePositionEmbeddingT5]() 来计算相对
 
     class T5(T5_Base):
 
+Google的T5模型（Encoder-Decoder）
+
 * * *
 
+分别调用[T5-Encoder](Todo) 和 [T5-Decoder](Todo)，构建一个完整的T5模型。
 
 ### def extend_with_language_model()
 
