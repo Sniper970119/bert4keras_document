@@ -552,7 +552,7 @@ example:
 |:-----  |-----|
 |inputs|输入:list 或 tensor 或 ndarry|
 |output_ids|输出id:list|
-|states|未知：未知|
+|states|携带的状态：list|
 
 
 返回：
@@ -568,7 +568,7 @@ example:
 `output_ids`输出的id，就是模型当前解析的输出（通过[beam search](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-beam_search ) 
 或者 [random_sample](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-random_sample ) ）
 
-`states`未知，只见到过为None的情况，以后了解后补全。
+`states`用来携带解码状态的变量。有些情况可能不仅仅需要进行seq2seq式的生成，还需要一些token状态，比如[UNILM+BIO标记的文本生成](https://kexue.fm/archives/8046) 每一个token需要携带一个BIO标记，而这个BIO标记就需要这个states进行携带。
 
 返回二元组 (得分或概率, states)。
 
@@ -603,7 +603,7 @@ example:
 
 创建一个只返回最后一个token输出的新Model。
 
-emm这个方法也挺奇妙的，感觉不到太大用处，个人认为可能是用于非keras模型时，这里返回一个keras.Model的模型。
+比如我们使用UNILM，那模型实际上会输出多个token，而我们只需要最后一个token（也就是当前轮次预测值），因此这个方法会自动的将模型的输出改为最后一个token，而不用我们手动取最后一个token。
 
 ### def beam_search()
 
@@ -633,7 +633,7 @@ beam search解码。
 
 `inputs`输入的序列，如果没有输入则为空列表
 `topk`topk即beam size
-`states`状态，我现在只见过None，我也不知道这玩意具体是干嘛的。
+`states`用来携带解码状态的变量。有些情况可能不仅仅需要进行seq2seq式的生成，还需要一些token状态，比如[UNILM+BIO标记的文本生成](https://kexue.fm/archives/8046) 每一个token需要携带一个BIO标记，而这个BIO标记就需要这个states进行携带。
 `temperature` 默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-predict )中的一个参数，用来控制结果的softmax比例。
 `min_ends`从代码阅读结果来看，应该是最小的结束标记次数，默认为1（比如生成nsp那种句子，则为2）。
 
@@ -677,7 +677,7 @@ beam search解码。
 `n` 输出个数
 `topk`非None的topk表示每一步只从概率最高的topk个中采样 
 `topp`非None的topp表示每一步只从概率最高的且概率之和刚好达到topp的若干个token中采样
-`states`状态，我现在只见过None，我也不知道这玩意具体是干嘛的。
+`states`用来携带解码状态的变量。有些情况可能不仅仅需要进行seq2seq式的生成，还需要一些token状态，比如[UNILM+BIO标记的文本生成](https://kexue.fm/archives/8046) 每一个token需要携带一个BIO标记，而这个BIO标记就需要这个states进行携带。
 `temperature`默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-predict )中的一个参数，用来控制结果的softmax比例。
 `inputs`非None的topp表示每一步只从概率最高的且概率之和刚好达到topp的若干个token中采样
 
@@ -687,6 +687,9 @@ beam search解码。
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/snippets.py#L705)
 
     def longest_common_substring(source, target)
+    
+最长公共子串（source和target的最长公共切片区间）
+    
     
 其中：
 
@@ -703,7 +706,9 @@ beam search解码。
 |l  |最大公共子串长度:int|
 |子串位置  |数据:list|
 
-查找最长公共子串。
+查找最长公共子串。返回：子串长度, 所在区间（四元组）
+
+注意：最长公共子串可能不止一个，所返回的区间只代表其中一个。
 
 `source`这里有一点出入吧，其实不应该命名为source和target，就是s1和s2的关系，找子串嘛。
 
@@ -712,6 +717,16 @@ beam search解码。
 最终返回一个最长子串长度和一个具有四个元素的列表，分别代表子串在s1和s2的start和end。
 
 这个算法可能还算是个暴力算法，并没有用例如KMP这类优化后的子串算法。
+
+example:
+
+    s1 = [1, 2, 3, 4, 5]
+    s2 = [3, 1, 2, 4, 1]
+    print(longest_common_substring(s1, s2))
+    
+    # output
+    (2, (0, 2, 1, 3))
+    # 最长公共子串长度为2，分别为s1的[0:2] 与 s2的[1:3]
 
 
 ### def longest_common_subsequence()
@@ -748,9 +763,9 @@ beam search解码。
     longest_common_subsequence(s1, s2)
     
     # output：
-    [(0, 0), (1, 2), (3, 3)]
+    [(0, 1), (1, 2), (3, 3)]
 
-我以为会输出[1,2]这个公共子串，结果只是输出了一样的位置(s1: idx0  == s2: idx0; s1: idx1 == s2: idx2)
+我以为会输出[1,2]这个公共子串，结果只是输出了一样的位置(s1: idx0  == s2: idx1; s1: idx1 == s2: idx2)
 
 那问题来了，s1: idx0  == s2: idx5 为啥没有呢？
 
