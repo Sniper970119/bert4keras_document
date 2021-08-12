@@ -632,9 +632,13 @@ example:
 beam search解码。
 
 `inputs`输入的序列，如果没有输入则为空列表
+
 `topk`topk即beam size
+
 `states`用来携带解码状态的变量。有些情况可能不仅仅需要进行seq2seq式的生成，还需要一些token状态，比如[UNILM+BIO标记的文本生成](https://kexue.fm/archives/8046) 每一个token需要携带一个BIO标记，而这个BIO标记就需要这个states进行携带。
+
 `temperature` 默认为1，是[predict](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-predict )中的一个参数，用来控制结果的softmax比例。
+
 `min_ends`从代码阅读结果来看，应该是最小的结束标记次数，默认为1（比如生成nsp那种句子，则为2）。
 
 ### def random_sample()
