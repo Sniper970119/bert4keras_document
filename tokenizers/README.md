@@ -159,6 +159,38 @@ example:
 `truncate_from`截断方向，对于超过最大长度的数据，截头部（left）还是截尾部（right）当然还支持通过一直删某个中间位置来截取（某一int值），
 截取方法详见[truncate_sequences](https://github.com/Sniper970119/bert4keras_document/tree/master/snippets#def-truncate_sequences )。
 
+**注意，由于bert4keras只提供了两局的分割，既[CLS]sentence1[SEP]sentence2[SEP]，如果用户有多句输入的需求，比如[CLS]sentence1[SEP]sentence2[SEP]sentence3[SEP],原生bert4keras无法做到[因为encode的实现逻辑将“[SEP]"视为了多个字符]，需要复写encode[支持更个性化的tokenize方式]，或者只需要简单的复写tokenize即可**
+
+example：
+
+    class CustomTokenizer(Tokenizer):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+        def tokenize(self, text, maxlen=None):
+            """分词函数
+            """
+            tokens = [
+                self._token_translate.get(token) or token
+                for token in self._tokenize(text)
+                ]
+            for i in range(len(tokens)):
+                # 将#转换为SEP，只有这里的SEP会被识别为分隔符
+                if tokens[i] == '#':
+                    tokens[i] = '[SEP]'
+            if self._token_start is not None:
+                tokens.insert(0, self._token_start)
+            if self._token_end is not None:
+                tokens.append(self._token_end)
+
+            if maxlen is not None:
+                index = int(self._token_end is not None) + 1
+                truncate_sequences(maxlen, -index, tokens)
+
+            return tokens
+
+上述代码就可以通过输入tokenizer sentence1#sentence2#sentence3 来实现[CLS]sentence1[SEP]sentence2[SEP]sentence3[SEP]
+
 ### def decode()
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/tokenizers.py#L215)
