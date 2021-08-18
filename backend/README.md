@@ -30,7 +30,7 @@
 
     def set_gelu(version)
 
-设置gelu版本，根据传入的version，动态的选择`gelu_tanh()`和`gelu_erf()`
+设置gelu版本（由于gelu没有精确数学表达，只能近似拟合，gelu有两个拟合版本），根据传入的version，动态的选择`gelu_tanh()`和`gelu_erf()`
 
 其中：
 
@@ -59,7 +59,7 @@
 
 根据inputs和name来搜索层
 
-根据inputs一直往上递归搜索，直到发现名字为name的层为止；如果找不到，那就返回None。
+根据inputs一直往上递归搜索，直到发现名字为name的层为止（所以输入应该是output）；如果找不到，那就返回None。
 
 其中：
 
