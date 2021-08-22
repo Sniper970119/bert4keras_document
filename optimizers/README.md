@@ -149,7 +149,9 @@ LAMB（Layer-wise Adaptive Moments optimizer for Batching training）优化器�
     def extend_with_piecewise_linear_lr_v2(BaseOptimizer)
     
 带有分段线性学习率的优化器,其中schedule是形如{1000: 1, 2000: 0.1}的字典，,表示0～1000步内学习率线性地从零增加到100%，然后
-1000～2000步内线性地降到10%，2000步以后保持10%。
+1000～2000步内线性地降到10%，2000步以后保持10%。 
+
+可以用来模拟退火，worm up等
 
 调用了backend中的[def piecewise_linear()](https://github.com/Sniper970119/bert4keras_document/tree/master/backend#def-piecewise_linear() )方法。
 
@@ -176,6 +178,7 @@ LAMB（Layer-wise Adaptive Moments optimizer for Batching training）优化器�
 
 梯度累计：就是类似于torch不清空梯度，累计几次再进行一次反向传播、清空梯度。从而“放大”batch size。同时学习率也要对应增大。
 
+PS：这个优化器实际使用来看并没有明显的效果，并且需要大范围的缩小batch size，感觉并不实用。当然也可能是任务的原因，在其他的提督累积实现方法下效果依然不明显。
 
 
 ### def extend_with_lookahead()
@@ -264,6 +267,8 @@ look ahead：通过一个内循环优化器（它可以是任何优化器，Adam
 维护一个shadow weight，这个shadow weight为前n次计算的weight的平均值。
 
 只能在测试阶段使用，训练阶段依然要使用真实的weight。
+
+PS：这个确实有效，而且效果不小，苏神的博客中也多次提到ema，从本人的实际测试中，ema会提高0.5左右，算得上一个十分好用的trick了。
 
 [苏神博客](https://kexue.fm/archives/6575#%E6%9D%83%E9%87%8D%E6%BB%91%E5%8A%A8%E5%B9%B3%E5%9D%87 )
 
