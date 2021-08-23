@@ -269,6 +269,8 @@ Bert类，继承了`Transformer`类
 
 我们可以发现，苏神在这里还支持了多segment_idx(原生bert仅支持两句话，也就是segment_vocab_size=2)。
 
+当然多segment是有代价的，就是原bert的segment需要被弃用，需要在代码的`def load_weights_from_checkpoint`（Transformer类的类方法）中将`Embedding-Segment`移除`mapping`（`mapping.pop('Embedding-Segment'）`)从而不再初始化这一部分权重。
+
 `with_pool`就是最后CLS的768维、`with_nsp`就是是否进行NSP任务（当进行NSP任务时，`with_pool`必须为True。因为nsp需要CLS向量。当然，这一步代码可以自动处理），
 
         if self.with_nsp and not self.with_pool:
