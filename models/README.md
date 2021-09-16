@@ -45,7 +45,7 @@ Model主要存放一些模型。比如Trm、Bert、T5等。
 `ignore_invalid_weights` 为是否允许跳过名字不匹配的权重。默认为False，为True时，遇到名字不匹配的层名字时， 会输出一个报错信息，但是程序并不会终止，改层的权重会随机初始化。
 
 
-2021.09.13更新：新增支持attention 的dropout。PS：由于更新，下面的源码行数（&SOURCE）可能有一定的偏移，但是由于更新较小，偏移不大，不做更改。[github地址](https://github.com/bojone/bert4keras/commit/48626f05ace6559c5c318a2f453c2296ababa8cd#diff-4a84fd2720a02ea8e9b5b7028daa441d2c02f5b1e9b1dcb4d561a0c8175e6ff9)
+2021.09.13更新：新增支持attention 的dropout。PS：由于更新，下面的源码行数（&SOURCE）可能有一定的偏移，但是由于更新较小，偏移不大，基本就在行数下面几行的位置，因此不做更改。[github地址](https://github.com/bojone/bert4keras/commit/48626f05ace6559c5c318a2f453c2296ababa8cd#diff-4a84fd2720a02ea8e9b5b7028daa441d2c02f5b1e9b1dcb4d561a0c8175e6ff9)
 
 
 ### def build(self):
