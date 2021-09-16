@@ -96,7 +96,7 @@ bert4keras：
 * * *
 ## class MultiHeadAttention()
 
-[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L122 )
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L234 )
 
     class MultiHeadAttention(Layer)
 
@@ -128,6 +128,8 @@ bert4keras：
 `use_bias`是否使用偏置（传入的QKV首先会经过一次线性变换后然后计算attention，这里的偏置指的是这个线性变化的，默认为True）。
 
 `attention_scale` 返回的注意力参数规模，如果为True则开方（sqrt）后返回。
+
+`attention_dropout`，2021.09.13更新，使能够对attention进行dropout，输入dropout rate
 
 `return_attention_scores`是否返回注意力分数。
 
