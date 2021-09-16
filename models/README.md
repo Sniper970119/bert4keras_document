@@ -19,6 +19,7 @@ Model主要存放一些模型。比如Trm、Bert、T5等。
         intermediate_size,  # FeedForward的隐层维度
         hidden_act,  # FeedForward隐层的激活函数
         dropout_rate=None,  # Dropout比例
+        attention_dropout_rate=None, # Attention矩阵的Dropout比例(2021.09.13更新）
         embedding_size=None,  # 是否指定embedding_size
         attention_head_size=None,  # Attention中V的head_size
         attention_key_size=None,  # Attention中Q,K的head_size
@@ -43,6 +44,10 @@ Model主要存放一些模型。比如Trm、Bert、T5等。
 
 `ignore_invalid_weights` 为是否允许跳过名字不匹配的权重。默认为False，为True时，遇到名字不匹配的层名字时， 会输出一个报错信息，但是程序并不会终止，改层的权重会随机初始化。
 
+
+2021.09.13更新：新增支持attention 的dropout。PS：由于更新，下面的源码行数（&SOURCE）可能有一定的偏移，但是由于更新较小，偏移不大，不做更改。[github地址](https://github.com/bojone/bert4keras/commit/48626f05ace6559c5c318a2f453c2296ababa8cd#diff-4a84fd2720a02ea8e9b5b7028daa441d2c02f5b1e9b1dcb4d561a0c8175e6ff9)
+
+
 ### def build(self):
 
     def build(
@@ -62,6 +67,7 @@ Model主要存放一些模型。比如Trm、Bert、T5等。
 比如在一个模型中生成积极的文本和消极的文本、在一个模型中进行短短文本匹配，短长文本匹配等。详见[苏神博客](https://kexue.fm/archives/7124 )
 
 `additional_input_layers`为除Bert原生输入外其余的输入项。通过`self.set_inputs()`来添加到模型中。
+
 
 ### def call(self):
 
