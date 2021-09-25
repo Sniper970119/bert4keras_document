@@ -18,6 +18,8 @@
 没发现什么不同却又处处不同。读了一下代码，大概猜测就如苏神说的一样，“重新定义Adam优化器，便于派生出新的优化器”。
 将tensorflow的代码提取，并去掉AmsGrad的支持，简化了一下。
 
+2021.09.25更：这里苏神实现的Adam还采用了误差修正（bias_correction，默认为True），在[论文](https://arxiv.org/abs/2006.05987)中发现，使用偏移修正的adam能够极大提升模型在测试集上的效果
+
 ## class AdaFactorBase
 
 [&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/optimizers.py#L92)
