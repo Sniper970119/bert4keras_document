@@ -156,6 +156,32 @@ bert4keras：
 
 这类方法计算一个偏置 bias，通过keras的support_mask=True在各个层之间传递，最终通过在原结果中减去一个极大值，从而将attention的结果变为一个绝对值很大的负数，这样这个位置的值在softmax就会无限接近于0，因此就被mask掉了。
 
+* * *
+## class GatedAttentionUnit()
+
+[&SOURCE](https://github.com/bojone/bert4keras/blob/master/bert4keras/layers.py#L612 )
+
+    class GatedAttentionUnit(Layer)
+    
+门控注意力单元    
+[链接](https://arxiv.org/abs/2202.10447)
+[苏神介绍](https://kexue.fm/archives/8934)
+
+
+其中：
+|参数| 说明|
+|:-----  |-----|
+|units  |dense的unit的个数:int|
+|key_size  |attention隐藏层个数:int|
+|activation  |激活方式，默认seish|
+|use_bias  |dense是否使用偏置|
+|normalization  |标准化方式，默认relu的平方:int|
+|attention_scale  |注意力是否使用scale（开立方），默认为True:bool|
+|attention_dropout  |注意力是否使用dropout，论文没有使用dropout，但是其实使用也无妨:float|
+|kernel_initializer  |初始化方式:str|
+
+
+
 
 * * *
 ## class LayerNormalization()
