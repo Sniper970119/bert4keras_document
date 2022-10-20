@@ -150,11 +150,11 @@ bert4keras：
 
 这里有一个规约：inputs[4]为attention bias，而inputs[5]则为position bias（如果不需要bias[a_bias=None]，则inputs[4]为position bias）.
 
-这里单独一提，对于语言模型的mask，并不是通过传统的“mask”手法（也许是我见识少），而是通过
+这里单独一提，对于语言模型的mask，是通过
 [LM_MASK](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-LM_Mask )以及
 [UniLM_Mask](https://github.com/Sniper970119/bert4keras_document/tree/master/models#class-UniLM_Mask)
 
-这类方法计算一个偏置 bias，通过在原结果中减去一个极大值，从而将attention的结果变为一个绝对值很大的负数，这样这个位置的值在softmax就会无限接近于0，因此就被mask掉了。
+这类方法计算一个偏置 bias，通过keras的support_mask=True在各个层之间传递，最终通过在原结果中减去一个极大值，从而将attention的结果变为一个绝对值很大的负数，这样这个位置的值在softmax就会无限接近于0，因此就被mask掉了。
 
 
 * * *
